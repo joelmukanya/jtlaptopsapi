@@ -64,7 +64,7 @@ router.get('/users/:id', (req, res)=> {
     })
 });
 // Register a new user
-router.post('/users', bodyParser.json(), (req, res)=> {
+router.post('/users', bodyParser.json(), async (req, res)=> {
     // Create user object
     let user = {};
     // Retrieving data that was sent by the user
