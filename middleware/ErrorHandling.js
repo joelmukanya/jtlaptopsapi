@@ -3,7 +3,7 @@ function errorHandling(err, req, res, next) {
         console.log(err.status);
         res.status(err.status).json(
             {
-                msg: "An error occurred. Please try again later."
+                err: "An error occurred. Please try again later."
             }
         )
     }

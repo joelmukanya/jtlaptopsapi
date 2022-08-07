@@ -75,50 +75,44 @@ router.post('/users', bodyParser.json(), (req, res)=> {
             userRole.includes() !== 'admin'))
             userRole = "user";
     }
-    // Check if a user already exists
-    let strQry =
-    `SELECT id, fullname, email, userpassword, userRole, joinDate
-    FROM users
-    WHERE LOWER(email) = LOWER('${email}')`;
+    // Encrypting a password. NB: Default value of salt is 10. 
+    userpassword = await hash(userpassword, 10);
+    // It will be used for payload on the JWT.
+    user = {
+        fullname,
+        email
+    }
+    // Query
+    strQry = 
+    `
+    INSERT INTO users(fullname, email, userpassword, userRole, phonenumber, joinDate)
+    VALUES(?, ?, ?, ?, ?, ?);
+    `;
     db.query(strQry, 
-        async (err, results)=> {
-        if(err){
-            throw err
-        }else {
-            if(results.length) {
-                res.status(409).json({msg: 'User already exist'});
+        [fullname, email, userpassword, userRole, phonenumber, joinDate],
+        (err)=> {
+            if(err){
+                res.status(201).json({msg: "This email is already taken."});
             }else {
-                // Encrypting a password
-                // Default value of salt is 10. 
-                userpassword = await hash(userpassword, 10);
-                // It will be used for payload on the JWT.
-                user = {
-                    fullname,
-                    email,
-                    userpassword,
-                    userRole,
-                    joinDate               
-                }
-                // Query
-                strQry = 
-                `
-                INSERT INTO users(fullname, email, userpassword, userRole, phonenumber, joinDate)
-                VALUES(?, ?, ?, ?, ?, ?);
-                `;
-                db.query(strQry, 
-                    [fullname, email, userpassword, userRole, phonenumber, joinDate],
-                    (err, results)=> {
-                        if(err){
-                           throw err;
-                        }else {
-                            const accessToken = createToken(user);
-                            // Keeping the token for later use
-                            res.status(200).json({msg: `number of affected row is: ${results.affectedRows}`});
-                        }
+                const accessToken = createToken(user);
+                console.log(accessToken);
+                // Keeping the token for later use
+                // After install cookie-parser then we can use res.cookie()
+                /*
+                    cookie(name, value, {
+                        (It will expire in a millisecond = 1000) maxAge:  
+                        m * sec * hrs 
+                        1 = 24 hrs
+                        2 = 48 hrs
+                        3 = 72 hrs
                     })
+                */
+                // res.cookie( "LegitUser", accessToken, {
+                //     maxAge: 60 * 60 * 72 
+                // })
+                res.status(200).json({msg: "You are now registered."});
             }
-        }
-    });
+        })
  });
  // User login
  router.patch('/users', (req, res)=> {
