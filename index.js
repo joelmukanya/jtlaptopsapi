@@ -2,12 +2,13 @@
 require('dotenv').config();
 const express = require('express');
 const path = require('path');
-const cors = require('cors');
 const {hash, compare } = require('bcrypt');
-const bodyParser = require('body-parser');
 // Middlewares
 const {createToken} = require('./middleware/AuthenticateUser');
-const errorHandling = require('./middleware/ErrorHandling');
+const {errorHandling} = require('./middleware/ErrorHandling');
+const bodyParser = require('body-parser');
+const cors = require('cors');
+const cookieParser = require('cookie-parser');
 // Database connection
 const db = require('./config/dbconn');
 // Express app
@@ -17,9 +18,12 @@ const router = express.Router();
 // port 
 const port = parseInt(process.env.PORT) || 4000;
 
-app.use(router, cors(), express.json(), express.urlencoded({
-    extended: true
-}));
+app.use(router, cors(), express.json(), 
+    cookieParser(), 
+    express.urlencoded({
+        extended: true
+    })
+);
 
 app.listen(port, ()=> {
     console.log(`Server is runnin on port ${port}`);
@@ -108,8 +112,7 @@ router.post('/users', bodyParser.json(), (req, res)=> {
                            throw err;
                         }else {
                             const accessToken = createToken(user);
-                            // Keeping the token in memory
-                            res.setHeader("authorization", `Bearer ${accessToken}`);
+                            // Keeping the token for later use
                             res.status(200).json({msg: `number of affected row is: ${results.affectedRows}`});
                         }
                     })
