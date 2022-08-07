@@ -4,7 +4,7 @@ const express = require('express');
 const path = require('path');
 const {hash, compare } = require('bcrypt');
 // Middlewares
-const {createToken} = require('./middleware/AuthenticateUser');
+const {createToken, verifyAToken} = require('./middleware/AuthenticateUser');
 const {errorHandling} = require('./middleware/ErrorHandling');
 const bodyParser = require('body-parser');
 const cors = require('cors');
@@ -26,7 +26,7 @@ app.use(router, cors(), express.json(),
 );
 
 app.listen(port, ()=> {
-    console.log(`Server is runnin on port ${port}`);
+    console.log(`Server is running on port ${port}`);
 })
 
 // Routers
@@ -37,7 +37,7 @@ router.get('^/$|/jtlaptops', (req, res)=> {
 // All users have been retrieved.
 router.get('/users', (req, res)=> {
     let strQry =
-    `SELECT id, fullname, email, userRole, phonenumber, joinDate, cart
+    `SELECT id, fullname, email, userpassword, userRole, phonenumber, joinDate, cart
     FROM users`;
     db.query(strQry, (err, results)=> {
         if(err) throw err; 
@@ -51,7 +51,7 @@ router.get('/users/:id', (req, res)=> {
     // Query
     const strQry = 
     `
-    SELECT id, fullname, email, userRole, phonenumber, joinDate, cart
+    SELECT id, fullname, email, userpassword, userRole, phonenumber, joinDate, cart
     FROM users
     WHERE id = ?;
     `;
@@ -75,13 +75,13 @@ router.post('/users', bodyParser.json(), async (req, res)=> {
             userRole.includes() !== 'admin'))
             userRole = "user";
     }
+    // JWT's payload.
+    user = {
+        email,
+        userpassword
+    }
     // Encrypting a password. NB: Default value of salt is 10. 
     userpassword = await hash(userpassword, 10);
-    // It will be used for payload on the JWT.
-    user = {
-        fullname,
-        email
-    }
     // Query
     strQry = 
     `
@@ -94,22 +94,24 @@ router.post('/users', bodyParser.json(), async (req, res)=> {
             if(err){
                 res.status(201).json({msg: "This email is already taken."});
             }else {
-                const accessToken = createToken(user);
-                console.log(accessToken);
+                const jwToken = createToken(user);
                 // Keeping the token for later use
                 // After install cookie-parser then we can use res.cookie()
                 /*
                     cookie(name, value, {
                         (It will expire in a millisecond = 1000) maxAge:  
-                        m * sec * hrs 
+                        m * sec * hrs * 1000
                         1 = 24 hrs
                         2 = 48 hrs
-                        3 = 72 hrs
+                        3 = 72 hrs,
+                        httpOnly: true
                     })
                 */
-                // res.cookie( "LegitUser", accessToken, {
-                //     maxAge: 60 * 60 * 72 
-                // })
+                res.cookie( "LegitUser", jwToken, {
+                    // 2.592e+8 = 3 days
+                    maxAge: 2.592e+8,
+                    httpOnly: true
+                });
                 res.status(200).json({msg: "You are now registered."});
             }
         })
@@ -120,7 +122,7 @@ router.post('/users', bodyParser.json(), async (req, res)=> {
     console.log(userpassword);
     const strQry = 
     `
-    SELECT fullname, email, userpassword, userRole
+    SELECT fullname, email, userpassword, userRole, phonenumber, joinDate, cart
     FROM users 
     WHERE email = '${email}';
     `;
@@ -144,28 +146,11 @@ router.post('/users', bodyParser.json(), async (req, res)=> {
                     }
                 )
             }
-            // Apply a token and it will expire within 1 hr.
+            // 
             if(cmpResults) {
-                const token = 
-                jwt.sign(
-                    {
-                        id: results[0].id,
-                        firstname: results[0].firstname,
-                        lastname: results[0].lastname,
-                        gender: results[0].gender,
-                        email: results[0].email
-                    },
-                    process.env.TOKEN_KEY, 
-                    {
-                        expiresIn: '1h'
-                    }, (err) => {
-                        if(err) throw err
-                    }  
-                );
                 // Login
                 res.status(200).json({
                     msg: 'Logged in',
-                    token,
                     results: results[0]
                 })                
             }
