@@ -7,7 +7,7 @@ const {hash, compare } = require('bcrypt');
 const bodyParser = require('body-parser');
 // Middlewares
 const {createToken} = require('./middleware/AuthenticateUser');
-const {errorHandling} = require('./middleware/ErrorHandling');
+const errorHandling = require('./middleware/ErrorHandling');
 // Database connection
 const db = require('./config/dbconn');
 // Express app
