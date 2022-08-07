@@ -38,7 +38,7 @@ router.get('/users', (req, res)=> {
     db.query(strQry, (err, results)=> {
         if(err) throw err; 
         res.status(200).json({
-            results: results
+            results: (results.length < 1) ? "Sorry, no data was found." : results
         })
     });
 })
@@ -89,14 +89,12 @@ router.post('/users', bodyParser.json(), (req, res)=> {
                 userpassword = await hash(userpassword, 10);
                 // It will be used for payload on the JWT.
                 user = {
-                    id: results[0].id,
-                    fullname: results[0].fullname,
-                    email: results[0].email,
-                    userpassword: results[0].userpassword,
-                    userRole: results[0].userRole,
-                    joinDate: results[0].joinDate               
+                    fullname,
+                    email,
+                    userpassword,
+                    userRole,
+                    joinDate               
                 }
-
                 // Query
                 strQry = 
                 `
@@ -110,6 +108,8 @@ router.post('/users', bodyParser.json(), (req, res)=> {
                            throw err;
                         }else {
                             const accessToken = createToken(user);
+                            // Keeping the token in memory
+                            res.setHeader("authorization", `Bearer ${accessToken}`);
                             res.status(200).json({msg: `number of affected row is: ${results.affectedRows}`});
                         }
                     })

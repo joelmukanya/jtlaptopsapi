@@ -1,9 +1,8 @@
 // Importing Authentication Middleware
 const jwt = require('jsonwebtoken');
 
-let createToken = (user) =>{
+function createToken(user){
     const token = jwt.sign({
-        id: user.id,
         fullname: user.fullname,
         email: user.email,
         userpassword: user.userpassword,
