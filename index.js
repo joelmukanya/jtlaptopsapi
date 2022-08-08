@@ -77,11 +77,6 @@ router.post('/users', bodyParser.json(), async (req, res)=> {
     // If the userRole is null or empty, set it to "user".
     if((userRole === null) || (userRole === undefined)) {
             userRole = "user";
-    }else {
-        if(( userRole.includes() !== 'user') || 
-            (userRole.includes() !== 'admin')){
-                userRole = "user";
-            }
     }
     if((joinDate === null) || (joinDate === undefined)) {
         joinDate = new Date();
