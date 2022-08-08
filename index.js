@@ -2,7 +2,7 @@
 require('dotenv').config();
 const express = require('express');
 const path = require('path');
-const {hash, compare } = require('bcrypt');
+const {hash, compare, hashSync } = require('bcrypt');
 // Middlewares
 const {createToken, verifyAToken} = require('./middleware/AuthenticateUser');
 const {errorHandling} = require('./middleware/ErrorHandling');
@@ -18,6 +18,15 @@ const router = express.Router();
 // port 
 const port = parseInt(process.env.PORT) || 4000;
 
+// Set header
+app.use((req, res, next)=>{
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+    res.setHeader("Access-Control-Allow-Methods", "GET,HEAD,OPTIONS,POST,PUT");
+    res.setHeader("Access-Control-Allow-Headers", "Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers");
+    next();
+});
+
 app.use(router, cors(), express.json(), 
     cookieParser(), 
     express.urlencoded({
@@ -28,12 +37,12 @@ app.use(router, cors(), express.json(),
 app.listen(port, ()=> {
     console.log(`Server is running on port ${port}`);
 })
-
-// Routers
+// ====================Routers====================
 // Home
 router.get('^/$|/jtlaptops', (req, res)=> {
     res.sendFile(path.join(__dirname, 'views', 'readMe.html'))
 })
+// ====================USER====================
 // All users have been retrieved.
 router.get('/users', (req, res)=> {
     let strQry =
@@ -48,7 +57,6 @@ router.get('/users', (req, res)=> {
 })
 // Display a specific user's information by their id.
 router.get('/users/:id', (req, res)=> {
-    // Query
     const strQry = 
     `
     SELECT id, fullname, email, userpassword, userRole, phonenumber, joinDate, cart
@@ -58,7 +66,7 @@ router.get('/users/:id', (req, res)=> {
     db.query(strQry, [req.params.id], (err, results)=> {
         if(err) throw err;
         res.json({
-            status: 200,
+            status: 204,
             results: (results.length < 1) ? "Sorry, no data was found." : results
         })
     })
@@ -68,12 +76,17 @@ router.post('/users', bodyParser.json(), async (req, res)=> {
     // Create user object
     let user = {};
     // Retrieving data that was sent by the user
-    let {fullname, email, userpassword, userRole, phonenumber, joinDate} = req.body; 
+    let {fullname, email, userpassword, userRole, phonenumber, joinDate, cart} = req.body; 
     // If the userRole is null or empty, set it to "user".
-    if(userRole.length === 0) {
+    if(userRole === null || userRole === undefined) {
+            userRole = "user";
+    }else {
         if(( userRole.includes() !== 'user' || 
             userRole.includes() !== 'admin'))
             userRole = "user";
+    }
+    if(joinDate === null || joinDate === undefined) {
+        joinDate = new Date();
     }
     // JWT's payload.
     user = {
@@ -85,14 +98,14 @@ router.post('/users', bodyParser.json(), async (req, res)=> {
     // Query
     strQry = 
     `
-    INSERT INTO users(fullname, email, userpassword, userRole, phonenumber, joinDate)
-    VALUES(?, ?, ?, ?, ?, ?);
+    INSERT INTO users(fullname, email, userpassword, userRole, phonenumber, joinDate, cart)
+    VALUES(?, ?, ?, ?, ?, ?, ?);
     `;
     db.query(strQry, 
-        [fullname, email, userpassword, userRole, phonenumber, joinDate],
+        [fullname, email, userpassword, userRole, phonenumber, joinDate, cart],
         (err)=> {
             if(err){
-                res.status(201).json({msg: "This email is already taken."});
+                res.status(400).json({err: "Unable to insert a new record, or this email is already taken."});
             }else {
                 const jwToken = createToken(user);
                 // Keeping the token for later use
@@ -116,10 +129,26 @@ router.post('/users', bodyParser.json(), async (req, res)=> {
             }
         })
  });
+ // Updating user
+router.put('/users/:id', bodyParser.json(), (req, res)=> {
+    let bd = req.body;
+    if(bd.userpassword !== null || bd.userpassword !== undefined){
+        bd.userpassword = hashSync(bd.userpassword, 10);
+    }
+    const strQry = 
+    `UPDATE users
+     SET ?
+     WHERE id = ?`;
+    db.query(strQry,[bd, req.params.id], (err)=> {
+        if(err) throw err;
+        res.status(200).json({
+            msg: "The user record was updated."
+        });
+    })
+});
  // User login
- router.patch('/users', (req, res)=> {
+ router.patch('/users', bodyParser.json(), (req, res)=> {
     const { email, userpassword } = req.body;
-    console.log(userpassword);
     const strQry = 
     `
     SELECT fullname, email, userpassword, userRole, phonenumber, joinDate, cart
@@ -134,29 +163,155 @@ router.post('/users', bodyParser.json(), async (req, res)=> {
             res.status(401).json( 
                 {msg: 'You provided the wrong email.'} 
             );
+        }else {
+            // Authenticating a user
+            await compare(userpassword, 
+                results[0].userpassword,
+                (cmpErr, cmpResults)=> {
+                if(cmpErr) throw cmpErr 
+                //
+                const user = {
+                    email,
+                    userpassword
+                };
+                jwToken = createToken(user);
+                res.cookie( "LegitUser", jwToken, {
+                    // 2.592e+8 = 3 days
+                    maxAge: 2.592e+8,
+                    httpOnly: true
+                });
+                if(cmpResults) {
+                    // Login
+                    res.status(200).json({
+                        msg: 'Logged in',
+                        jwToken,
+                        results: results[0]
+                    })                
+                }else {
+                    res.status(200).json({
+                        msg: 'Invalid password or you have not registered'
+                    })            
+                }
+            });
         }
-        // Authenticating a user
-        await compare(userpassword, 
-            results[0].userpassword,
-            (cmpErr, cmpResults)=> {
-            if(cmpErr) {
-                res.status(401).json(
-                    {
-                        msg: 'You provided the wrong password'
-                    }
-                )
-            }
-            // 
-            if(cmpResults) {
-                // Login
-                res.status(200).json({
-                    msg: 'Logged in',
-                    results: results[0]
-                })                
-            }
-        });
     })
  })
-
+// Delete a user 
+router.delete('/users/:id', (req, res)=> {
+    const strQry = 
+    `
+    DELETE FROM users 
+    WHERE id = ?;
+    `;
+    db.query(strQry,[req.params.id], (err)=> {
+        if(err) throw err;
+        res.status(200).json({msg: "A user was deleted."});
+    })
+})
+// ====================CART====================
+// Get a cart of a specific user
+router.get('/users/:id/cart', (req, res)=> {
+    const strQry = 
+    `
+    SELECT cart
+    FROM users
+    WHERE id = ?;
+    `;
+    db.query(strQry,[req.params.id], (err, results)=> {
+        if(err) throw err;
+        res.status(200).json(
+            {results: (results.length < 1) ? "Sorry, no cart is available." : results});
+    })
+})
+// Add a cart for a specific user.
+router.post('/users/:id/cart', (req, res)=> {
+    /*
+        INSERT INTO foo_table (id, foo_ids, name) VALUES (
+            1,
+            JSON_ARRAY_APPEND(
+                '[]',
+                '$',
+                CAST('{"id": "432"}' AS JSON),
+                '$',
+                CAST('{"id": "433"}' AS JSON)
+            ),
+            'jumbo burger'
+        );
+    */
+    const strQry = 
+    `UPDATE users
+     WHERE id = ?`; 
+    db.query(strQry,[req.params.cart, req.params.id], (err, results)=> {
+        if(err) throw err;
+        res.status(200).json({results: results});
+    })
+})
+// ====================PRODUCTS====================
+// Fetch all products.
+router.get('/products', (req, res)=> {
+    const strQry = 
+    `
+    SELECT id, title, category, descripton, imgURL, price, userID, quantity
+    FROM products;
+    `;
+    db.query(strQry, (err, results)=> {
+        if(err) throw err;
+        res.status(200).json(
+            {results: (results.length < 1) ? "Sorry, products are not yet available." : results});
+    })
+})
+// Obtain a specific product.
+router.get('/products/:id', (req, res)=> {
+    const strQry = 
+    `
+    SELECT id, title, category, descripton, imgURL, price, userID, quantity
+    FROM products
+    WHERE id = ?;
+    `;
+    db.query(strQry, [req.params.id], (err, results)=> {
+        if(err) throw err;
+        res.status(200).json(
+            {results: (results.length < 1) ? "Sorry, this product is not yet available." : results});
+    })
+})
+// Add a new product.
+router.post('/products', bodyParser.json(), (req, res)=> {
+    const bd = req.body;
+    const strQry = 
+    `
+    INSERT INTO products(title, category, descripton, imgURL, price, userID, quantity)
+    VALUES ?
+    ;`;
+    db.query(strQry, [bd], (err)=> {
+        if(err) throw err;
+        res.status(200).json({msg: "A product was saved."});
+    })
+});
+// Update product
+router.put('/products/:id', bodyParser.json(), (req, res)=> {
+    const bd = req.body;
+    const strQry = 
+    `
+    UPDATE products
+    SET ?
+    WHERE id = ?
+    `;
+    db.query(strQry, [bd, req.params.id], (err)=> {
+        if(err) throw err;
+        res.status(200).json({msg: "A product was modified."});
+    })
+});
+// Delete a product.
+router.delete('/products/:id', (req, res)=> {
+    const strQry = 
+    `
+    DELETE FROM products
+    WHERE id = ?;
+    `;
+    db.query(strQry, [req.params.id], (err)=> {
+        if(err) throw err;
+        res.status(200).json({msg: "A product was deleted."});
+    })
+});
 // To be able to catch all errors.
 app.use(errorHandling);

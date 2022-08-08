@@ -1,8 +1,9 @@
 function errorHandling(err, req, res, next) {
     if(err){
-        console.log(err.status);
-        res.status(err.status).json(
+        const status = err.status || 500;
+        res.status(status).json(
             {
+                status: status,
                 err: "An error occurred. Please try again later."
             }
         )
