@@ -37,7 +37,32 @@ app.listen(port, ()=> {
 // ====================Routers====================
 // Home
 router.get('^/$|/jtlaptops', (req, res)=> {
-    res.sendFile(path.join(__dirname, 'views', 'readMe.html'))
+    // res.sendFile(path.join(__dirname, 'views', 'readMe.html'))
+    res.send(`
+        <h2>How to use our website</h2>
+        <h4>Users</h4>
+        <ul>
+            <li><span>GET (root or home): </span> /</li>
+            <li><span>GET: </span> /users</li>
+            <li><span>GET: </span> /users/:id</li>
+            <li><span>POST: </span>/users</li>
+            <li><span>PATCH: </span>/users</li>
+            <li><span>PUT: </span>/users/:id</li>
+            <li><span>DELETE: </span>/users/:id</li>
+            <li><span>GET: </span>/users/:id/cart</li>
+            <li><span>POST: </span>/users/:id/cart</li>
+            <li><span>PUT: </span>/users/:id/cart</li>
+            <li><span>DELETE: </span>/users/:id/cart</li>
+        </ul>
+        <h4>Products</h4>
+        <ul>
+            <li><span>GET: </span>/products</li>
+            <li><span>GET: </span>/products/:id</li>
+            <li><span>POST: </span>/products</li>
+            <li><span>PUT: </span>/products/:id</li>
+            <li><span>DELETE: </span>/products/:id</li>
+        </ul>   
+    `);
 })
 // ====================USER====================
 // All users have been retrieved.
