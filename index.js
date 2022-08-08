@@ -17,7 +17,6 @@ const app = express();
 const router = express.Router();
 // port 
 const port = parseInt(process.env.PORT) || 4000;
-
 // Set header
 app.use((req, res, next)=>{
     res.setHeader("Access-Control-Allow-Origin", "*");
@@ -26,14 +25,12 @@ app.use((req, res, next)=>{
     res.setHeader("Access-Control-Allow-Headers", "Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers");
     next();
 });
-
 app.use(router, cors(), express.json(), 
     cookieParser(), 
     express.urlencoded({
         extended: true
     })
 );
-
 app.listen(port, ()=> {
     console.log(`Server is running on port ${port}`);
 })
@@ -78,24 +75,25 @@ router.post('/users', bodyParser.json(), async (req, res)=> {
     // Retrieving data that was sent by the user
     let {fullname, email, userpassword, userRole, phonenumber, joinDate, cart} = req.body; 
     // If the userRole is null or empty, set it to "user".
-    if(userRole === null || userRole === undefined) {
+    if((userRole === null) || (userRole === undefined)) {
             userRole = "user";
     }else {
-        if(( userRole.includes() !== 'user' || 
-            userRole.includes() !== 'admin'))
-            userRole = "user";
+        if(( userRole.includes() !== 'user') || 
+            (userRole.includes() !== 'admin')){
+                userRole = "user";
+            }
     }
-    if(joinDate === null || joinDate === undefined) {
+    if((joinDate === null) || (joinDate === undefined)) {
         joinDate = new Date();
     }
     // JWT's payload.
+    // Encrypting a password. NB: Default value of salt is 10. 
+    userpassword = await hash(userpassword, 10);
+    // information that will be used for authentication.
     user = {
         email,
         userpassword
     }
-    // Encrypting a password. NB: Default value of salt is 10. 
-    userpassword = await hash(userpassword, 10);
-    // Query
     strQry = 
     `
     INSERT INTO users(fullname, email, userpassword, userRole, phonenumber, joinDate, cart)
