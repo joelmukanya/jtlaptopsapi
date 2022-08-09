@@ -12,15 +12,14 @@ let connection;
         database: process.env.database,
         multipleStatements: true
     });
-    
-    connection.connect( (err)=> {
+    connection.connect( (err, conn)=> {
         try {
             if(err) throw err 
         }catch(e) {
-            const msg = e;
+            const msg = e.message;
+            conn.reject({"msg": msg});
         }
     });
-    
     connection.on('error', (err)=> {
         if(err.code === 'PROTOCOL_CONNECTION_LOST'){
             handleConnection();
