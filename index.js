@@ -31,9 +31,7 @@ app.use(router, cors(), express.json(),
         extended: true
     })
 );
-app.listen(port, ()=> {
-    console.log(`Server is running on port ${port}`);
-})
+app.listen(port);
 // ====================Routers====================
 // Home
 router.get('^/$|/jtlaptops', (req, res)=> {
@@ -94,8 +92,8 @@ router.post('/users', bodyParser.json(), async (req, res)=> {
     INSERT INTO users(fullname, email, userpassword, userRole, phonenumber, joinDate, cart)
     VALUES(?, ?, ?, ?, ?, ?, ?);
     `;
-    db.query(strQry, 
-        [fullname, email, userpassword, userRole, phonenumber, joinDate, cart],
+    db.query(strQry,[fullname, email, userpassword, userRole, 
+        phonenumber, joinDate, cart],
         (err)=> {
             if(err){
                 res.status(400).json({err: "Unable to insert a new record, or this email is already taken."});
@@ -244,7 +242,7 @@ router.post('/users/:id/cart', (req, res)=> {
 router.get('/products', (req, res)=> {
     const strQry = 
     `
-    SELECT id, title, category, descripton, imgURL, price, userID, quantity
+    SELECT id, title, category, descripton, imgURL, price, quantity, availableInStore, userID 
     FROM products;
     `;
     db.query(strQry, (err, results)=> {
@@ -257,7 +255,7 @@ router.get('/products', (req, res)=> {
 router.get('/products/:id', (req, res)=> {
     const strQry = 
     `
-    SELECT id, title, category, descripton, imgURL, price, userID, quantity
+    SELECT id, title, category, descripton, imgURL, price, quantity, availableInStore, userID
     FROM products
     WHERE id = ?;
     `;
@@ -270,11 +268,11 @@ router.get('/products/:id', (req, res)=> {
 // Add a new product.
 router.post('/products', bodyParser.json(), (req, res)=> {
     const bd = req.body;
+    console.log(bd);
     const strQry = 
     `
-    INSERT INTO products(title, category, descripton, imgURL, price, userID, quantity)
-    VALUES ?
-    ;`;
+    INSERT INTO products(title, category, descripton, imgURL, price, quantity, availableInStore, userID)
+    VALUES ?;`;
     db.query(strQry, [bd], (err)=> {
         if(err) throw err;
         res.status(200).json({msg: "A product was saved."});
