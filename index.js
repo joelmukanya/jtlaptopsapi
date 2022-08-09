@@ -267,13 +267,13 @@ router.get('/products/:id', (req, res)=> {
 })
 // Add a new product.
 router.post('/products', bodyParser.json(), (req, res)=> {
-    const bd = req.body;
-    console.log(bd);
+    const {title, category, descripton, imgURL, price,
+         quantity, availableInStore, userID} = req.body;
     const strQry = 
     `
     INSERT INTO products(title, category, descripton, imgURL, price, quantity, availableInStore, userID)
-    VALUES ?;`;
-    db.query(strQry, [bd], (err)=> {
+    VALUES(?, ?, ?, ?, ?, ?, ?, ?);`;
+    db.query(strQry, [title, category, descripton, imgURL, price, quantity, availableInStore, userID], (err)=> {
         if(err) throw err;
         res.status(200).json({msg: "A product was saved."});
     })
