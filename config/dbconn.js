@@ -21,7 +21,8 @@ let connection;
         }
     });
     connection.on('error', (err)=> {
-        if(err.code === 'PROTOCOL_CONNECTION_LOST'){
+        if(err.code === 'PROTOCOL_CONNECTION_LOST' || 
+        err.code === 'PROTOCOL_ENQUEUE_AFTER_FATAL_ERROR'){
             handleConnection();
         }else {
             throw err;
