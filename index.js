@@ -259,7 +259,8 @@ router.get('/products/:id', (req, res)=> {
     db.query(strQry, [req.params.id], (err, results)=> {
         if(err) throw err;
         res.status(200).json(
-            {results: (results.length < 1) ? "Sorry, this product is not yet available." : results});
+            {results: (results.length < 1 || 
+                results == null) ? "Sorry, this product is not yet available." : results});
     })
 })
 // Add a new product.
