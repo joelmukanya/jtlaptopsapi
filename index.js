@@ -239,7 +239,7 @@ router.post('/users/:id/cart', (req, res)=> {
 router.get('/products', (req, res)=> {
     const strQry = 
     `
-    SELECT id, title, category, descripton, imgURL, price, quantity, availableInStore, userID 
+    SELECT id, title, category, prodDescription, imgURL, price, quantity, availableInStore, userID 
     FROM products;
     `;
     db.query(strQry, (err, results)=> {
@@ -252,7 +252,7 @@ router.get('/products', (req, res)=> {
 router.get('/products/:id', (req, res)=> {
     const strQry = 
     `
-    SELECT id, title, category, descripton, imgURL, price, quantity, availableInStore, userID
+    SELECT id, title, category, prodDescription, imgURL, price, quantity, availableInStore, userID
     FROM products
     WHERE id = ?;
     `;
@@ -268,7 +268,7 @@ router.post('/products', bodyParser.json(), (req, res)=> {
          quantity, availableInStore, userID} = req.body;
     const strQry = 
     `
-    INSERT INTO products(title, category, descripton, imgURL, price, quantity, availableInStore, userID)
+    INSERT INTO products(title, category, prodDescription, imgURL, price, quantity, availableInStore, userID)
     VALUES(?, ?, ?, ?, ?, ?, ?, ?);`;
     db.query(strQry, [title, category, descripton, imgURL, price, quantity, availableInStore, userID], (err)=> {
         if(err) throw err;
