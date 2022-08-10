@@ -306,3 +306,8 @@ router.delete('/products/:id', (req, res)=> {
 });
 // To be able to catch all errors.
 app.use(errorHandling);
+module.exports = {
+    devServer: {
+        Proxy: '*'
+    }
+}
