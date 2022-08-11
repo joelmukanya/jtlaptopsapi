@@ -20,6 +20,7 @@ const port = parseInt(process.env.PORT) || 4000;
 // Set header
 app.use((req, res, next)=>{
     res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Headers", "*");
     next();
 });
 app.use(router, cors(), express.json(), 
