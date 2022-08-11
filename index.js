@@ -197,6 +197,14 @@ router.delete('/users/:id', (req, res)=> {
     })
 })
 // ====================CART====================
+/*
+1. Can add multiple items to cart
+2. View cart: No duplicate should be display. User with a matching ID
+3. Update cart items: Adding or removing items
+4. delete /users/:id/cart Clear cart
+======
+
+*/
 // Get a cart of a specific user
 router.get('/users/:id/cart', (req, res)=> {
     const strQry = 
@@ -210,7 +218,7 @@ router.get('/users/:id/cart', (req, res)=> {
         res.status(200).json(
             {results: (results.length < 1) ? "Sorry, no cart is available." : results});
     })
-})
+});
 // Add a cart for a specific user.
 router.post('/users/:id/cart', (req, res)=> {
     /*
