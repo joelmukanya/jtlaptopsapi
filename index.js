@@ -17,6 +17,9 @@ const app = express();
 const router = express.Router();
 // port 
 const port = parseInt(process.env.PORT) || 4000;
+app.use(cors({
+    origin: '*',
+ }));
 // Set header
 // app.use((req, res, next)=>{
 //     res.setHeader("Access-Control-Allow-Origin", "*");
@@ -313,11 +316,3 @@ router.delete('/products/:id', (req, res)=> {
 });
 // To be able to catch all errors.
 app.use(errorHandling);
-app.use(cors({
-    origin: '*',
- }));
-module.exports = {
-    devServer: {
-        Proxy: '*'
-    }
-}
