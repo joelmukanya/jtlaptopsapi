@@ -18,15 +18,14 @@ const router = express.Router();
 // port 
 const port = parseInt(process.env.PORT) || 4000;
 // Set header
-app.use(cors({
-    origin: 'http://localhost:8080',
- }));
 app.use((req, res, next)=>{
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Access-Control-Allow-Headers", "*");
     next();
 });
-app.use(router, express.json(), 
+app.use(router, cors({
+    origin: 'http://localhost:8080',
+ }), express.json(), 
     cookieParser(), 
     express.urlencoded({
         extended: true
@@ -140,6 +139,8 @@ router.put('/users/:id', bodyParser.json(), (req, res)=> {
 });
  // User login
  router.patch('/users', bodyParser.json(), (req, res)=> {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Headers", "*");
     const { email, userpassword } = req.body;
     const strQry = 
     `
