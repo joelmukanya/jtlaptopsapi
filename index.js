@@ -23,7 +23,9 @@ app.use((req, res, next)=>{
     res.setHeader("Access-Control-Allow-Headers", "*");
     next();
 });
-app.use(router, cors(), express.json(), 
+app.use(router, cors({
+    origin: 'http://localhost:8080',
+ }), express.json(), 
     cookieParser(), 
     express.urlencoded({
         extended: true
