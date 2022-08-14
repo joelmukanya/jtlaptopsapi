@@ -7,7 +7,7 @@ const {hash, compare, hashSync } = require('bcrypt');
 const {createToken, verifyAToken} = require('./middleware/AuthenticateUser');
 const {errorHandling} = require('./middleware/ErrorHandling');
 const bodyParser = require('body-parser');
-const cors = require('cors');
+// const cors = require('cors');
 const cookieParser = require('cookie-parser');
 // Database connection
 const db = require('./config/dbconn');
@@ -17,15 +17,15 @@ const app = express();
 const router = express.Router();
 // port 
 const port = parseInt(process.env.PORT) || 4000;
-app.use(cors({
-    origin: '*',
- }));
+// app.use(cors({
+//     origin: '*',
+//  }));
 // Set header
-app.use((req, res, next)=>{
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Access-Control-Allow-Headers", "*");
-    next();
-});
+// app.use((req, res, next)=>{
+//     res.setHeader("Access-Control-Allow-Origin", "*");
+//     res.setHeader("Access-Control-Allow-Headers", "*");
+//     next();
+// });
 app.use(router, express.json(), 
     cookieParser(), 
     express.urlencoded({
