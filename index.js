@@ -251,7 +251,7 @@ router.post('/users/:id/cart', (req, res)=> {
 router.get('/products', (req, res)=> {
     const strQry = 
     `
-    SELECT id, title, category, prodDescription, imgURL, price, quantity, availableInStore, userID 
+    SELECT id, title, category, prodDescription, imgURL, price, quantity, userID 
     FROM products;
     `;
     db.query(strQry, (err, results)=> {
@@ -264,7 +264,7 @@ router.get('/products', (req, res)=> {
 router.get('/products/:id', (req, res)=> {
     const strQry = 
     `
-    SELECT id, title, category, prodDescription, imgURL, price, quantity, availableInStore, userID
+    SELECT id, title, category, prodDescription, imgURL, price, quantity, userID
     FROM products
     WHERE id = ?;
     `;
@@ -278,12 +278,12 @@ router.get('/products/:id', (req, res)=> {
 // Add a new product.
 router.post('/products', bodyParser.json(), (req, res)=> {
     const {title, category, prodDescription, imgURL, price,
-         quantity, availableInStore, userID} = req.body;
+         quantity, userID} = req.body;
     const strQry = 
     `
-    INSERT INTO products(title, category, prodDescription, imgURL, price, quantity, availableInStore, userID)
-    VALUES(?, ?, ?, ?, ?, ?, ?, ?);`;
-    db.query(strQry, [title, category, prodDescription, imgURL, price, quantity, availableInStore, userID], (err)=> {
+    INSERT INTO products(title, category, prodDescription, imgURL, price, quantity, userID)
+    VALUES(?, ?, ?, ?, ?, ?, ?);`;
+    db.query(strQry, [title, category, prodDescription, imgURL, price, quantity, userID], (err)=> {
         if(err) throw err;
         res.status(200).json({msg: "A product was saved."});
     })
