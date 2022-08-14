@@ -21,11 +21,11 @@ app.use(cors({
     origin: '*',
  }));
 // Set header
-// app.use((req, res, next)=>{
-//     res.setHeader("Access-Control-Allow-Origin", "*");
-//     res.setHeader("Access-Control-Allow-Headers", "*");
-//     next();
-// });
+app.use((req, res, next)=>{
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Headers", "*");
+    next();
+});
 app.use(router, express.json(), 
     cookieParser(), 
     express.urlencoded({
