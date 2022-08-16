@@ -236,7 +236,7 @@ router.post('/users/:id/cart', (req, res)=> {
     const strQry = 
     `UPDATE users
      WHERE id = ?`; 
-    db.query(strQry,[req.params.cart, req.params.id], (err, results)=> {
+    db.query(strQry,[ req.params.id, req.params.cart], (err, results)=> {
         if(err) throw err;
         res.status(200).json({results: results});
     })
